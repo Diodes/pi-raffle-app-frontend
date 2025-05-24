@@ -1,5 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+
+// ✅ Required to make Pi Platform API calls
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -11,23 +15,49 @@ app.get("/", (req, res) => {
   res.send("Pi Raffle Backend Running");
 });
 
-// 💰 Step 1: Handle payment approval
-app.post("/payments/approve", (req, res) => {
+// ✅ Real Pi payment approval endpoint
+app.post("/payments/approve", async (req, res) => {
   const { paymentId } = req.body;
 
-  console.log("Received approval request for payment:", paymentId);
+  try {
+    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.PI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-  // For now, approve every payment
-  res.json({ status: "approved" });
+    const result = await response.json();
+    console.log("✅ Approved payment:", result);
+    res.json(result);
+  } catch (error) {
+    console.error("❌ Error approving payment:", error);
+    res.status(500).json({ error: "Approval failed" });
+  }
 });
 
-// ✅ Step 2: Handle payment completion (optional logging)
-app.post("/payments/complete", (req, res) => {
+// ✅ Real Pi payment completion endpoint
+app.post("/payments/complete", async (req, res) => {
   const { paymentId, txid } = req.body;
 
-  console.log("Payment completed:", paymentId, "TXID:", txid);
+  try {
+    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.PI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ txid }),
+    });
 
-  res.json({ success: true });
+    const result = await response.json();
+    console.log("✅ Completed payment:", result);
+    res.json(result);
+  } catch (error) {
+    console.error("❌ Error completing payment:", error);
+    res.status(500).json({ error: "Completion failed" });
+  }
 });
 
 app.listen(PORT, () => {
