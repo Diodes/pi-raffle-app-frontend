@@ -80,27 +80,30 @@ function App() {
       <p className="text-sm mt-2 text-blue-600">{paymentLog}</p>
 
       {user ? (
-        <div>
-          <p>Welcome, <strong>{user.username}</strong>!</p>
-        </div>
-      ) : (
-        <div>
-          <button
-            className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
-            onClick={handleLogin}
-          >
-            Login with Pi
-          </button>
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded mt-2"
-            onClick={handleTestPayment}
-          >
-            Test Pi Payment
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+  <div>
+    <p>Welcome, <strong>{user.username}</strong>!</p>
+    <button
+      className="px-4 py-2 bg-green-600 text-white rounded mt-2"
+      onClick={handleTestPayment}
+    >
+      Test Pi Payment
+    </button>
+  </div>
+) : (
+  <div>
+    <button
+      className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
+      onClick={handleLogin}
+    >
+      Login with Pi
+    </button>
+    <button
+      className="px-4 py-2 bg-green-600 text-white rounded mt-2"
+      onClick={handleTestPayment}
+    >
+      Test Pi Payment
+    </button>
+  </div>
+)}
 
 export default App;
