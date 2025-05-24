@@ -11,22 +11,21 @@ function App() {
   };
 
   const handleLogin = async () => {
-    alert("Login button was clicked!");
-    try {
-      const scopes = ["username", "payments"];
-      setLogMessage("💡 Pi SDK object: " + JSON.stringify(window.Pi));
+  try {
+    const scopes = ["username", "payments"];
+    setLogMessage("🔄 Initializing Pi SDK...");
+    
+    window.Pi.init({ version: "2.0", sandbox: true });
+    setLogMessage("🚀 Calling Pi.authenticate...");
 
-      window.Pi.init({ version: "2.0", sandbox: true });
-      setLogMessage("🚀 Calling Pi.authenticate...");
+    const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
 
-      const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      setUser(user);
-      setLogMessage(`✅ Pi user: ${user.username}`);
-    } catch (error) {
-      setLogMessage(`❌ Pi login failed: ${error?.message || error}`);
-      alert("Login failed. Check the screen for details.");
-    }
-  };
+    setUser(user);
+    setLogMessage(`✅ Pi login successful! Username: ${user.username}`);
+  } catch (error) {
+    setLogMessage(`❌ Pi login failed: ${error.message || "Unknown error"}`);
+  }
+};
 
   const handleTestPayment = async () => {
   try {
