@@ -26,6 +26,16 @@ function App() {
     // You can handle this on the backend if needed
   };
 
+  const [sdkStatus, setSdkStatus] = useState("");
+
+useEffect(() => {
+  if (typeof window.Pi === "undefined") {
+    setSdkStatus("❌ Pi SDK not loaded");
+  } else {
+    setSdkStatus("✅ Pi SDK loaded");
+  }
+}, []);
+  
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">🚀 Pi Raffle App</h1>
