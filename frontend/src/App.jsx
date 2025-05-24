@@ -15,7 +15,7 @@ function App() {
     const scopes = ["username", "payments"];
     setLogMessage("🟢 Pi.init + calling authenticate...");
 
-    window.Pi.init({ version: "2.0", sandbox: true });
+    window.Pi.init({ version: "2.0" }); // ← remove sandbox
 
     if (!window.Pi.authenticate) {
       setLogMessage("❌ Pi.authenticate is not defined.");
