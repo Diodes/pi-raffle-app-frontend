@@ -8,7 +8,7 @@ function App() {
       const scopes = ["username", "payments"];
 
       // Initialize the SDK
-      window.Pi.init({ version: "2.0" });
+      window.Pi.init({ version: "2.0", sandbox: true });
 
       // Authenticate the user
       const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
