@@ -13,17 +13,25 @@ function App() {
   const handleLogin = async () => {
   try {
     const scopes = ["username", "payments"];
-    setLogMessage("🔄 Initializing Pi SDK...");
-    
+    setLogMessage("🟢 Pi.init + calling authenticate...");
+
     window.Pi.init({ version: "2.0", sandbox: true });
-    setLogMessage("🚀 Calling Pi.authenticate...");
+
+    if (!window.Pi.authenticate) {
+      setLogMessage("❌ Pi.authenticate is not defined.");
+      return;
+    }
 
     const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
 
-    setUser(user);
-    setLogMessage(`✅ Pi login successful! Username: ${user.username}`);
+    if (!user) {
+      setLogMessage("❌ No user returned.");
+    } else {
+      setUser(user);
+      setLogMessage(`✅ Logged in as ${user.username}`);
+    }
   } catch (error) {
-    setLogMessage(`❌ Pi login failed: ${error.message || "Unknown error"}`);
+    setLogMessage(`❌ Login error: ${error.message || "unknown"}`);
   }
 };
 
