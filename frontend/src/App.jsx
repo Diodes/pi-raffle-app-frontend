@@ -3,26 +3,27 @@ import { useState, useEffect } from "react";
 function App() {
   const [user, setUser] = useState(null);
   const [sdkStatus, setSdkStatus] = useState("");
+  const [logMessage, setLogMessage] = useState("");
 
   const onIncompletePaymentFound = (payment) => {
-    console.log("⚠️ Incomplete payment found:", payment);
-    // You can handle this on the backend if needed
+    setLogMessage("⚠️ Incomplete payment found: " + JSON.stringify(payment));
   };
 
   const handleLogin = async () => {
     alert("Login button was clicked!");
     try {
       const scopes = ["username", "payments"];
+      setLogMessage("💡 Pi SDK object: " + JSON.stringify(window.Pi));
 
-      console.log("💡 Pi SDK object:", window.Pi);
       window.Pi.init({ version: "2.0", sandbox: true });
+      setLogMessage("🚀 Calling Pi.authenticate...");
 
       const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
       setUser(user);
-      console.log("✅ Pi user:", user);
+      setLogMessage(`✅ Pi user: ${user.username}`);
     } catch (error) {
-      console.error("❌ Pi login failed:", error);
-      alert("Login failed. Check console.");
+      setLogMessage(`❌ Pi login failed: ${error?.message || error}`);
+      alert("Login failed. Check the screen for details.");
     }
   };
 
@@ -38,6 +39,7 @@ function App() {
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">🚀 Pi Raffle App</h1>
       <p className="text-sm mt-2">{sdkStatus}</p>
+      <p className="text-sm mt-2 text-red-600">{logMessage}</p>
 
       {user ? (
         <div>
