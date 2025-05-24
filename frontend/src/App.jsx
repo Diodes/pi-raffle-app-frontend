@@ -4,6 +4,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [sdkStatus, setSdkStatus] = useState("");
   const [logMessage, setLogMessage] = useState("");
+  const [paymentLog, setPaymentLog] = useState("");
 
   const onIncompletePaymentFound = (payment) => {
     setLogMessage("⚠️ Incomplete payment found: " + JSON.stringify(payment));
@@ -28,33 +29,33 @@ function App() {
   };
 
   const handleTestPayment = async () => {
-    try {
-      const paymentData = {
-        amount: 0.001,
-        memo: "Test Raffle Ticket",
-        metadata: { test: true },
-      };
+  try {
+    const paymentData = {
+      amount: 0.001,
+      memo: "Test Raffle Ticket",
+      metadata: { test: true },
+    };
 
-      const payment = await window.Pi.createPayment(paymentData, {
-        onReadyForServerApproval: (paymentId) => {
-          console.log("Ready for server approval", paymentId);
-        },
-        onReadyForServerCompletion: (paymentId, txid) => {
-          console.log("Ready for server completion", paymentId, txid);
-        },
-        onCancel: (paymentId) => {
-          console.log("Payment cancelled", paymentId);
-        },
-        onError: (error, payment) => {
-          console.error("Payment error", error);
-        },
-      });
+    const payment = await window.Pi.createPayment(paymentData, {
+      onReadyForServerApproval: (paymentId) => {
+        setPaymentLog(`🟡 Ready for server approval: ${paymentId}`);
+      },
+      onReadyForServerCompletion: (paymentId, txid) => {
+        setPaymentLog(`✅ Payment complete! ID: ${paymentId}, TXID: ${txid}`);
+      },
+      onCancel: (paymentId) => {
+        setPaymentLog(`⚠️ Payment cancelled: ${paymentId}`);
+      },
+      onError: (error) => {
+        setPaymentLog(`❌ Payment error: ${error.message || error}`);
+      },
+    });
 
-      console.log("Payment object returned:", payment);
-    } catch (err) {
-      console.error("Failed to create payment:", err);
-    }
-  };
+    console.log("Payment object returned:", payment);
+  } catch (err) {
+    setPaymentLog(`❌ Failed to create payment: ${err.message || err}`);
+  }
+};
 
   useEffect(() => {
     if (typeof window.Pi === "undefined") {
@@ -69,6 +70,7 @@ function App() {
       <h1 className="text-xl font-bold mb-4">🚀 Pi Raffle App</h1>
       <p className="text-sm mt-2">{sdkStatus}</p>
       <p className="text-sm mt-2 text-red-600">{logMessage}</p>
+      <p className="text-sm mt-2 text-blue-600">{paymentLog}</p>
 
       {user ? (
         <div>
