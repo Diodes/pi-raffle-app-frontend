@@ -1,99 +1,99 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [sdkStatus, setSdkStatus] = useState("");
-  const [logMessage, setLogMessage] = useState("");
-  const [paymentLog, setPaymentLog] = useState("");
-
-  const onIncompletePaymentFound = (payment) => {
-    setLogMessage("⚠️ Incomplete payment found: " + JSON.stringify(payment));
-  };
-
-  const handleLogin = async () => {
-  try {
-    const scopes = ["username", "payments"];
-    setLogMessage("🟢 Pi.init + calling authenticate...");
-
-    window.Pi.init({ version: "2.0", sandbox: true });
-
-    if (!window.Pi.authenticate) {
-      setLogMessage("❌ Pi.authenticate is not defined.");
-      return;
-    }
-
-    const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-
-    if (!user) {
-      setLogMessage("❌ No user returned.");
-    } else {
-      setUser(user);
-      setLogMessage(`✅ Logged in as ${user.username}`);
-    }
-  } catch (error) {
-    setLogMessage(`❌ Login error: ${error.message || "unknown"}`);
-  }
-};
-
-  const handleTestPayment = async () => {
-  try {
-    const paymentData = {
-      amount: 0.001,
-      memo: "Test Raffle Ticket",
-      metadata: { test: true },
-    };
-
-    const payment = await window.Pi.createPayment(paymentData, {
-      onReadyForServerApproval: (paymentId) => {
-        setPaymentLog(`🟡 Ready for server approval: ${paymentId}`);
-      },
-      onReadyForServerCompletion: (paymentId, txid) => {
-        setPaymentLog(`✅ Payment complete! ID: ${paymentId}, TXID: ${txid}`);
-      },
-      onCancel: (paymentId) => {
-        setPaymentLog(`⚠️ Payment cancelled: ${paymentId}`);
-      },
-      onError: (error) => {
-        setPaymentLog(`❌ Payment error: ${error.message || error}`);
-      },
-    });
-
-    console.log("Payment object returned:", payment);
-  } catch (err) {
-    setPaymentLog(`❌ Failed to create payment: ${err.message || err}`);
-  }
-};
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [log, setLog] = useState("");
 
   useEffect(() => {
-    if (typeof window.Pi === "undefined") {
-      setSdkStatus("❌ Pi SDK not loaded");
+    // Initialize Pi SDK in sandbox mode
+    if (window.Pi) {
+      window.Pi.init({ version: "2.0", sandbox: true });
+      setLog("✅ Pi SDK initialized (sandbox mode)");
     } else {
-      setSdkStatus("✅ Pi SDK loaded");
+      setLog("❌ Pi SDK not found");
     }
   }, []);
 
-  return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">🚀 Pi Raffle App</h1>
-      <p className="text-sm mt-2">{sdkStatus}</p>
-      <p className="text-sm mt-2 text-red-600">{logMessage}</p>
-      <p className="text-sm mt-2 text-blue-600">{paymentLog}</p>
+  const onIncompletePaymentFound = (payment) => {
+    console.log("⚠️ Incomplete payment found", payment);
+    setPaymentStatus("⚠️ Incomplete payment found");
+  };
 
-      {user ? (
-        <div>
-          <p>Welcome, <strong>{user.username}</strong>!</p>
-        </div>
+  const handleLogin = async () => {
+    if (!window.Pi) {
+      setLog("❌ Pi SDK not loaded");
+      return;
+    }
+
+    try {
+      setLog("🔐 Attempting Pi.authenticate...");
+      const scopes = ["username", "payments"];
+      const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+      console.log("✅ Authenticated user:", user);
+      setUser(user);
+      setLog(`✅ Logged in as ${user.username}`);
+    } catch (err) {
+      console.error("❌ Login failed:", err);
+      setLog("❌ Login failed: " + (err.message || err));
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      setPaymentStatus("❌ You must login first");
+      return;
+    }
+
+    try {
+      const paymentData = {
+        amount: 0.001,
+        memo: "Demo Payment",
+        metadata: { type: "demo" },
+      };
+
+      const payment = await window.Pi.createPayment(paymentData, {
+        onReadyForServerApproval: (paymentId) => {
+          setPaymentStatus("🟡 Ready for server approval: " + paymentId);
+        },
+        onReadyForServerCompletion: (paymentId, txid) => {
+          setPaymentStatus("✅ Payment complete! TXID: " + txid);
+        },
+        onCancel: (paymentId) => {
+          setPaymentStatus("⚠️ Payment cancelled: " + paymentId);
+        },
+        onError: (error, payment) => {
+          setPaymentStatus("❌ Payment error: " + error.message || error);
+        },
+      });
+
+      console.log("Payment response:", payment);
+    } catch (err) {
+      console.error("❌ Payment failed:", err);
+      setPaymentStatus("❌ Payment failed: " + (err.message || err));
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-4">Pi Demo App</h1>
+
+      <p className="text-sm text-gray-700 mb-2">{log}</p>
+      <p className="text-sm text-blue-600 mb-4">{paymentStatus}</p>
+
+      {!user ? (
+        <button
+          className="bg-purple-600 text-white px-4 py-2 rounded"
+          onClick={handleLogin}
+        >
+          Login with Pi
+        </button>
       ) : (
         <div>
+          <p className="mb-2">Welcome, <strong>{user.username}</strong></p>
           <button
-            className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
-            onClick={handleLogin}
-          >
-            Login with Pi
-          </button>
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded mt-2"
-            onClick={handleTestPayment}
+            className="bg-green-600 text-white px-4 py-2 rounded"
+            onClick={handlePayment}
           >
             Test Pi Payment
           </button>
