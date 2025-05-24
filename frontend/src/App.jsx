@@ -27,6 +27,35 @@ function App() {
     }
   };
 
+  const handleTestPayment = async () => {
+    try {
+      const paymentData = {
+        amount: 0.001,
+        memo: "Test Raffle Ticket",
+        metadata: { test: true },
+      };
+
+      const payment = await window.Pi.createPayment(paymentData, {
+        onReadyForServerApproval: (paymentId) => {
+          console.log("Ready for server approval", paymentId);
+        },
+        onReadyForServerCompletion: (paymentId, txid) => {
+          console.log("Ready for server completion", paymentId, txid);
+        },
+        onCancel: (paymentId) => {
+          console.log("Payment cancelled", paymentId);
+        },
+        onError: (error, payment) => {
+          console.error("Payment error", error);
+        },
+      });
+
+      console.log("Payment object returned:", payment);
+    } catch (err) {
+      console.error("Failed to create payment:", err);
+    }
+  };
+
   useEffect(() => {
     if (typeof window.Pi === "undefined") {
       setSdkStatus("❌ Pi SDK not loaded");
@@ -46,12 +75,20 @@ function App() {
           <p>Welcome, <strong>{user.username}</strong>!</p>
         </div>
       ) : (
-        <button
-          className="px-4 py-2 bg-purple-600 text-white rounded"
-          onClick={handleLogin}
-        >
-          Login with Pi
-        </button>
+        <div>
+          <button
+            className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
+            onClick={handleLogin}
+          >
+            Login with Pi
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded mt-2"
+            onClick={handleTestPayment}
+          >
+            Test Pi Payment
+          </button>
+        </div>
       )}
     </div>
   );
