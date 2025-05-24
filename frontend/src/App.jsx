@@ -4,6 +4,7 @@ function App() {
   const [user, setUser] = useState(null);
 
   const handleLogin = async () => {
+        alert("Login button was clicked!");
     try {
       const scopes = ["username", "payments"];
 
