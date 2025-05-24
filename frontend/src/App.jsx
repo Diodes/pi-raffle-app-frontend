@@ -11,58 +11,58 @@ function App() {
   };
 
   const handleLogin = async () => {
-  try {
-    const scopes = ["username", "payments"];
-    setLogMessage("🟢 Pi.init + calling authenticate...");
+    try {
+      const scopes = ["username", "payments"];
+      setLogMessage("🟢 Pi.init + calling authenticate...");
 
-    window.Pi.init({ version: "2.0" }); // ← remove sandbox
+      window.Pi.init({ version: "2.0" });
 
-    if (!window.Pi.authenticate) {
-      setLogMessage("❌ Pi.authenticate is not defined.");
-      return;
+      if (!window.Pi.authenticate) {
+        setLogMessage("❌ Pi.authenticate is not defined.");
+        return;
+      }
+
+      const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+
+      if (!user) {
+        setLogMessage("❌ No user returned.");
+      } else {
+        setUser(user);
+        setLogMessage(`✅ Logged in as ${user.username}`);
+      }
+    } catch (error) {
+      setLogMessage(`❌ Login error: ${error.message || "unknown"}`);
     }
-
-    const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-
-    if (!user) {
-      setLogMessage("❌ No user returned.");
-    } else {
-      setUser(user);
-      setLogMessage(`✅ Logged in as ${user.username}`);
-    }
-  } catch (error) {
-    setLogMessage(`❌ Login error: ${error.message || "unknown"}`);
-  }
-};
+  };
 
   const handleTestPayment = async () => {
-  try {
-    const paymentData = {
-      amount: 0.001,
-      memo: "Test Raffle Ticket",
-      metadata: { test: true },
-    };
+    try {
+      const paymentData = {
+        amount: 0.001,
+        memo: "Test Raffle Ticket",
+        metadata: { test: true },
+      };
 
-    const payment = await window.Pi.createPayment(paymentData, {
-      onReadyForServerApproval: (paymentId) => {
-        setPaymentLog(`🟡 Ready for server approval: ${paymentId}`);
-      },
-      onReadyForServerCompletion: (paymentId, txid) => {
-        setPaymentLog(`✅ Payment complete! ID: ${paymentId}, TXID: ${txid}`);
-      },
-      onCancel: (paymentId) => {
-        setPaymentLog(`⚠️ Payment cancelled: ${paymentId}`);
-      },
-      onError: (error) => {
-        setPaymentLog(`❌ Payment error: ${error.message || error}`);
-      },
-    });
+      const payment = await window.Pi.createPayment(paymentData, {
+        onReadyForServerApproval: (paymentId) => {
+          setPaymentLog(`🟡 Ready for server approval: ${paymentId}`);
+        },
+        onReadyForServerCompletion: (paymentId, txid) => {
+          setPaymentLog(`✅ Payment complete! ID: ${paymentId}, TXID: ${txid}`);
+        },
+        onCancel: (paymentId) => {
+          setPaymentLog(`⚠️ Payment cancelled: ${paymentId}`);
+        },
+        onError: (error) => {
+          setPaymentLog(`❌ Payment error: ${error.message || error}`);
+        },
+      });
 
-    console.log("Payment object returned:", payment);
-  } catch (err) {
-    setPaymentLog(`❌ Failed to create payment: ${err.message || err}`);
-  }
-};
+      console.log("Payment object returned:", payment);
+    } catch (err) {
+      setPaymentLog(`❌ Failed to create payment: ${err.message || err}`);
+    }
+  };
 
   useEffect(() => {
     if (typeof window.Pi === "undefined") {
@@ -80,30 +80,34 @@ function App() {
       <p className="text-sm mt-2 text-blue-600">{paymentLog}</p>
 
       {user ? (
-  <div>
-    <p>Welcome, <strong>{user.username}</strong>!</p>
-    <button
-      className="px-4 py-2 bg-green-600 text-white rounded mt-2"
-      onClick={handleTestPayment}
-    >
-      Test Pi Payment
-    </button>
-  </div>
-) : (
-  <div>
-    <button
-      className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
-      onClick={handleLogin}
-    >
-      Login with Pi
-    </button>
-    <button
-      className="px-4 py-2 bg-green-600 text-white rounded mt-2"
-      onClick={handleTestPayment}
-    >
-      Test Pi Payment
-    </button>
-  </div>
-)}
+        <div>
+          <p>Welcome, <strong>{user.username}</strong>!</p>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded mt-2"
+            onClick={handleTestPayment}
+          >
+            Test Pi Payment
+          </button>
+        </div>
+      ) : (
+        <div>
+          <button
+            className="px-4 py-2 bg-purple-600 text-white rounded mr-2"
+            onClick={handleLogin}
+          >
+            Login with Pi
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded mt-2"
+            onClick={handleTestPayment}
+            disabled={!user}
+          >
+            Test Pi Payment
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default App;
