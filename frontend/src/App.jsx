@@ -9,6 +9,7 @@ function App() {
       const scopes = ["username", "payments"];
 
       // Initialize the SDK
+      console.log("💡 Pi SDK object:", window.Pi);
       window.Pi.init({ version: "2.0", sandbox: true });
 
       // Authenticate the user
