@@ -17,6 +17,8 @@ app.get("/", (req, res) => {
 
 // ✅ Real Pi payment approval endpoint
 app.post("/payments/approve", async (req, res) => {
+  console.log("📥 /payments/approve HIT");
+  console.log("Request body:", req.body);
   const { paymentId } = req.body;
 
   try {
