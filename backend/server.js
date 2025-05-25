@@ -31,8 +31,8 @@ app.post("/payments/approve", async (req, res) => {
     });
 
     const result = await response.json();
-console.log("✅ Approved payment:", result);
-res.json({ status: "approved" }); // ✅ This is what Pi expects
+    console.log("✅ Approved payment:", result);
+    res.json({ status: "approved" }); // ✅ This is what Pi expects
   } catch (error) {
     console.error("❌ Error approving payment:", error);
     res.status(500).json({ error: "Approval failed" });
@@ -55,7 +55,7 @@ app.post("/payments/complete", async (req, res) => {
 
     const result = await response.json();
     console.log("✅ Completed payment:", result);
-    res.json(result);
+    res.json({ success: true }); // ✅ This is what Pi expects
   } catch (error) {
     console.error("❌ Error completing payment:", error);
     res.status(500).json({ error: "Completion failed" });
