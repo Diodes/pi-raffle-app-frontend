@@ -41,7 +41,7 @@ function App() {
         onReadyForServerApproval: async (paymentId) => {
           setPaymentLog(`🟡 Approving payment: ${paymentId}`);
           try {
-            const res await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
+            const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
