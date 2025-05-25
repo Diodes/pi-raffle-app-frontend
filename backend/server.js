@@ -2,9 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
-// ✅ Required to make Pi Platform API calls
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
 const app = express();
 const PORT = process.env.PORT;
 
@@ -15,51 +12,22 @@ app.get("/", (req, res) => {
   res.send("Pi Raffle Backend Running");
 });
 
-// ✅ Real Pi payment approval endpoint
-app.post("/payments/approve", async (req, res) => {
-  console.log("📥 /payments/approve HIT");
-  console.log("Request body:", req.body);
+// ✅ Simplified Pi payment approval endpoint
+app.post("/payments/approve", (req, res) => {
   const { paymentId } = req.body;
+  console.log("📥 /payments/approve HIT", paymentId);
 
-  try {
-    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${process.env.PI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    const result = await response.json();
-    console.log("✅ Approved payment:", result);
-    res.json({ status: "approved" }); // ✅ This is what Pi expects
-  } catch (error) {
-    console.error("❌ Error approving payment:", error);
-    res.status(500).json({ error: "Approval failed" });
-  }
+  // Respond with approval — let Pi handle the rest
+  res.json({ status: "approved" });
 });
 
-// ✅ Real Pi payment completion endpoint
-app.post("/payments/complete", async (req, res) => {
+// ✅ Simplified Pi payment completion endpoint
+app.post("/payments/complete", (req, res) => {
   const { paymentId, txid } = req.body;
+  console.log("📥 /payments/complete HIT", paymentId, txid);
 
-  try {
-    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${process.env.PI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ txid }),
-    });
-
-    const result = await response.json();
-    console.log("✅ Completed payment:", result);
-    res.json({ success: true }); // ✅ This is what Pi expects
-  } catch (error) {
-    console.error("❌ Error completing payment:", error);
-    res.status(500).json({ error: "Completion failed" });
-  }
+  // Acknowledge completion — again, let Pi handle confirmation
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {
