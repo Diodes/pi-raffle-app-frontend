@@ -41,7 +41,7 @@ function App() {
         onReadyForServerApproval: async (paymentId) => {
           setPaymentLog(`🟡 Approving payment: ${paymentId}`);
           try {
-            const res = await fetch("/payments/approve", {
+            const res = await fetch("https://3e93-2607-fea8-4e61-6e00-ad3d-85-4253-acc6.ngrok-free.app/payments/approve", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -58,7 +58,7 @@ function App() {
         onReadyForServerCompletion: async (paymentId, txid) => {
           setPaymentLog(`🔄 Completing payment: ${paymentId} (TXID: ${txid})`);
           try {
-            const res = await fetch("/payments/complete", {
+            const res = await fetch("https://3e93-2607-fea8-4e61-6e00-ad3d-85-4253-acc6.ngrok-free.app/payments/complete", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
