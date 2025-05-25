@@ -6,7 +6,7 @@ const cors = require("cors");
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
