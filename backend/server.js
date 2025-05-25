@@ -31,8 +31,8 @@ app.post("/payments/approve", async (req, res) => {
     });
 
     const result = await response.json();
-    console.log("✅ Approved payment:", result);
-    res.json(result);
+console.log("✅ Approved payment:", result);
+res.json({ status: "approved" }); // ✅ This is what Pi expects
   } catch (error) {
     console.error("❌ Error approving payment:", error);
     res.status(500).json({ error: "Approval failed" });
