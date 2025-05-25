@@ -1,4 +1,4 @@
-# Pi Raffle App Frontend
+# Pi-Raffle-App-Frontend
 
 A decentralized raffle app built with React, Vite, and the Pi Network SDK.
 
