@@ -30,80 +30,70 @@ function App() {
   };
 
   const handleTestPayment = async () => {
-    try {
-      const paymentData = {
-        amount: 0.001,
-        memo: "Test Raffle Ticket",
-        metadata: { test: true },
-      };
+  try {
+    const paymentData = {
+      amount: 0.001,
+      memo: "Test Raffle Ticket",
+      metadata: { test: true },
+    };
 
-      const payment = await window.Pi.createPayment(paymentData, {
-        onReadyForServerApproval: async (paymentId) => {
-          console.log("🟡 onReadyForServerApproval:", paymentId);
-          setPaymentLog(prev => prev + `\n🟡 Approving payment: ${paymentId}`);
+    const payment = await window.Pi.createPayment(paymentData, {
+      onReadyForServerApproval: async (paymentId) => {
+        setPaymentLog(`🟡 Approving payment: ${paymentId}`);
+        try {
+          const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ paymentId }),
+          });
 
-          try {
-            const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId }),
-            });
+          const result = await res.json();
+          console.log("✅ Server approved payment:", result);
 
-            const result = await res.json();
-            console.log("✅ Server approved payment:", result);
-            setPaymentLog(prev => prev + `\n✅ Server response: ${JSON.stringify(result)}`);
-
-            if (result.status === "approved") {
-              await payment.approve();
-              console.log("✅ Called payment.approve()");
-              setPaymentLog(prev => prev + "\n✅ Called payment.approve()");
-            } else {
-              setPaymentLog(prev => prev + "\n❌ Server did not approve the payment");
-            }
-          } catch (err) {
-            console.error("❌ Approval failed:", err);
-            setPaymentLog(prev => prev + "\n❌ Approval error: " + err.message);
+          // ✅ This line is crucial
+          if (result.status === "approved") {
+            await payment.approve();  // YOU MUST CALL THIS
+            setPaymentLog("✅ Called payment.approve()");
+          } else {
+            setPaymentLog("❌ Server didn't approve payment");
           }
-        },
+        } catch (err) {
+          setPaymentLog("❌ Approval error: " + err.message);
+        }
+      },
 
-        onReadyForServerCompletion: async (paymentId, txid) => {
-          console.log("🟢 onReadyForServerCompletion:", paymentId, txid);
-          setPaymentLog(prev => prev + `\n🔄 Completing payment: ${paymentId} (TXID: ${txid})`);
+      onReadyForServerCompletion: async (paymentId, txid) => {
+        setPaymentLog(`🔄 Completing payment: ${paymentId}`);
+        try {
+          const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ paymentId, txid }),
+          });
 
-          try {
-            const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId, txid }),
-            });
-
-            const result = await res.json();
-            console.log("✅ Server completed payment:", result);
-            setPaymentLog(prev => prev + `\n✅ Server response: ${JSON.stringify(result)}`);
-
-            if (result.success) {
-              await payment.complete();
-              console.log("✅ Called payment.complete()");
-              setPaymentLog(prev => prev + "\n✅ Payment completed!");
-            } else {
-              setPaymentLog(prev => prev + "\n❌ Server did not complete the payment");
-            }
-          } catch (err) {
-            console.error("❌ Completion failed:", err);
-            setPaymentLog(prev => prev + "\n❌ Completion error: " + err.message);
+          const result = await res.json();
+          if (result.success) {
+            await payment.complete(); // ✅ Also essential!
+            setPaymentLog("✅ Payment completed!");
+          } else {
+            setPaymentLog("❌ Server didn't confirm payment");
           }
-        },
+        } catch (err) {
+          setPaymentLog("❌ Completion error: " + err.message);
+        }
+      },
+    });
 
-        onCancel: (paymentId) => {
-          console.warn("⚠️ Payment cancelled:", paymentId);
-          setPaymentLog(prev => prev + "\n⚠️ Payment was cancelled.");
-        },
-
-        onError: (err) => {
-          console.error("❌ Payment error:", err);
-          setPaymentLog(prev => prev + "\n❌ Payment error: " + err.message);
-        },
-      });
+    console.log("Payment object returned:", payment);
+  } catch (err) {
+    console.error("❌ Failed to create payment:", err);
+    setPaymentLog("❌ Failed to create payment: " + err.message);
+  }
+};
 
       console.log("🧾 Payment object returned:", payment);
       setPaymentLog(prev => prev + "\n🧾 Payment object created.");
