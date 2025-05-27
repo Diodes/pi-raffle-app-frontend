@@ -14,7 +14,7 @@ function App() {
   const handleLogin = async () => {
     try {
       setLogMessage("🟢 Pi.init + calling authenticate...");
-      window.Pi.init({ version: "2.0" });
+      window.Pi.init({ version: "2.0" }) // NO sandbox
 
       const scopes = ["username", "payments"];
       const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
