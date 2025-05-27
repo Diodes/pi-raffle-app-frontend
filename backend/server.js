@@ -1,9 +1,10 @@
+console.log("🔥 Starting backend server...");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
@@ -12,23 +13,6 @@ app.get("/", (req, res) => {
   res.send("Pi Raffle Backend Running");
 });
 
-<<<<<<< HEAD
-// ✅ Simplified Pi payment approval endpoint
-app.post("/payments/approve", (req, res) => {
-  const { paymentId } = req.body;
-  console.log("📥 /payments/approve HIT", paymentId);
-
-  // Respond with approval — let Pi handle the rest
-  res.json({ status: "approved" });
-});
-
-// ✅ Simplified Pi payment completion endpoint
-app.post("/payments/complete", (req, res) => {
-  const { paymentId, txid } = req.body;
-  console.log("📥 /payments/complete HIT", paymentId, txid);
-
-  // Acknowledge completion — again, let Pi handle confirmation
-=======
 app.post("/payments/approve", (req, res) => {
   const { paymentId } = req.body;
   console.log("📥 /payments/approve HIT", paymentId);
@@ -38,7 +22,6 @@ app.post("/payments/approve", (req, res) => {
 app.post("/payments/complete", (req, res) => {
   const { paymentId, txid } = req.body;
   console.log("📥 /payments/complete HIT", paymentId, txid);
->>>>>>> ce28821 (updates)
   res.json({ success: true });
 });
 
