@@ -1,30 +1,43 @@
-console.log("🔥 Starting backend server...");
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
+const fetch = require("node-fetch"); // if not installed: npm install node-fetch
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Pi Raffle Backend Running");
-});
-
-app.post("/payments/approve", (req, res) => {
+app.post("/payments/approve", async (req, res) => {
   const { paymentId } = req.body;
   console.log("📥 /payments/approve HIT", paymentId);
-  res.json({ status: "approved" });
-});
 
-app.post("/payments/complete", (req, res) => {
-  const { paymentId, txid } = req.body;
-  console.log("📥 /payments/complete HIT", paymentId, txid);
-  res.json({ success: true });
-});
+  try {
+    const response = await fetch(`https://api.minepi.com/payments/${paymentId}`, {
+      headers: {
+        Authorization: `Key ${process.env.PI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on port ${PORT}`);
+    if (!response.ok) {
+      console.error("❌ Pi API response not OK");
+      return res.status(500).json({ status: "error", message: "Failed to verify payment" });
+    }
+
+    const data = await response.json();
+
+    // ✅ Only approve if the payment is in the 'pending' state
+    if (data && data.transaction && data.transaction.status === "pending") {
+      console.log("✅ Payment verified with Pi Network");
+      res.json({ status: "approved" });
+    } else {
+      console.warn("⚠️ Payment not pending or invalid response:", data);
+      res.status(400).json({ status: "not_approved" });
+    }
+  } catch (error) {
+    console.error("❌ Error verifying payment:", error);
+    res.status(500).json({ status: "error", message: error.message });
+  }
 });
