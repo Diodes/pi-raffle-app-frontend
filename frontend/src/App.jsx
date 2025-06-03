@@ -12,76 +12,98 @@ function App() {
   };
 
   const handleLogin = async () => {
-  try {
-    setLogMessage("🟢 Pi.init + calling authenticate...");
-    window.Pi.init({ version: "2.0" }); // NO sandbox
+    try {
+      setLogMessage("🟢 Pi.init + calling authenticate...");
+      window.Pi.init({ version: "2.0" }); // No sandbox for production
 
-    const scopes = ["username", "payments"];
-    const authResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-    console.log("🔐 Pi.authenticate result:", authResult);
+      const scopes = ["username", "payments"];
+      const authResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+      console.log("🔐 Pi.authenticate result:", authResult);
 
-    const actualUser = authResult?.user || authResult; // Fallback to entire object if not nested
-    if (!actualUser?.username) {
-      setLogMessage("❌ No username found in auth result");
-    } else {
-      setUser(actualUser);
-      setLogMessage(`✅ Logged in as ${actualUser.username}`);
+      const actualUser = authResult?.user || authResult;
+      if (!actualUser?.username) {
+        setLogMessage("❌ No username found in auth result");
+      } else {
+        setUser(actualUser);
+        setLogMessage(`✅ Logged in as ${actualUser.username}`);
+      }
+    } catch (error) {
+      setLogMessage(`❌ Login error: ${error.message || error}`);
     }
-  } catch (error) {
-    setLogMessage(`❌ Login error: ${error.message || error}`);
-  }
-};
-
+  };
 
   const handleTestPayment = async () => {
-  try {
-    const paymentData = {
-      amount: 0.001,
-      memo: "Test Raffle Ticket",
-      metadata: { test: true },
-    };
+    try {
+      const paymentData = {
+        amount: 0.001,
+        memo: "Test Raffle Ticket",
+        metadata: { test: true },
+      };
 
-    const payment = await window.Pi.createPayment(paymentData, {
-     
+      const payment = await window.Pi.createPayment(paymentData, {
+        onReadyForServerApproval: async (paymentId) => {
+          setPaymentLog(`🟡 Approving payment: ${paymentId}`);
 
-     onReadyForServerCompletion: async (paymentId, txid) => {
-  try {
-    const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ paymentId, txid }),
-    });
+          try {
+            const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ paymentId }),
+            });
 
-    const result = await res.json();
-    if (result.success) {
-      setPaymentLog("✅ Payment completed (backend confirmed)!");
-    } else {
-      setPaymentLog("⚠️ Backend responded, but not successful: " + JSON.stringify(result));
+            const result = await res.json();
+            if (result.status === "approved") {
+              await payment.approve();
+              setPaymentLog(prev => prev + "\n✅ Called payment.approve()");
+            } else {
+              setPaymentLog(prev => prev + "\n⚠️ Approval failed: " + JSON.stringify(result));
+            }
+          } catch (err) {
+            console.error("❌ Approval error:", err);
+            setPaymentLog("❌ Approval error: " + err.message);
+          }
+        },
+
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          try {
+            const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ paymentId, txid }),
+            });
+
+            const result = await res.json();
+            if (result.success) {
+              setPaymentLog("✅ Payment completed (backend confirmed)!");
+            } else {
+              setPaymentLog("⚠️ Backend responded, but not successful: " + JSON.stringify(result));
+            }
+          } catch (err) {
+            console.error("❌ Completion error:", err);
+            setPaymentLog("❌ Completion error: " + err.message);
+          }
+        },
+
+        onCancel: (paymentId) => {
+          setPaymentLog("⚠️ Payment was cancelled.");
+        },
+
+        onError: (err) => {
+          setPaymentLog("❌ Payment error: " + err.message);
+        },
+      });
+
+      console.log("🧾 Payment object returned:", payment);
+      setPaymentLog(prev => prev + "\n🧾 Payment object created.");
+    } catch (err) {
+      console.error("❌ Failed to create payment:", err);
+      setPaymentLog(prev => prev + "\n❌ Failed to create payment: " + err.message);
     }
-  } catch (err) {
-    console.error("❌ Completion error:", err);
-    setPaymentLog("❌ Completion error: " + err.message);
-  }
-},
-
-onCancel: (paymentId) => {
-  setPaymentLog("⚠️ Payment was cancelled.");
-},
-
-onError: (err) => {
-  setPaymentLog("❌ Payment error: " + err.message);
-},
-
-
-    console.log("🧾 Payment object returned:", payment);
-    setPaymentLog(prev => prev + "\n🧾 Payment object created.");
-  } catch (err) {
-    console.error("❌ Failed to create payment:", err);
-    setPaymentLog(prev => prev + "\n❌ Failed to create payment: " + err.message);
-  }
-};
+  };
 
   useEffect(() => {
     if (typeof window.Pi === "undefined") {
