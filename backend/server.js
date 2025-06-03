@@ -23,12 +23,14 @@ app.post("/payments/approve", async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://api.minepi.com/payments/${paymentId}`, {
-      headers: {
-        Authorization: `Key ${process.env.PI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
+  method: "GET",
+  headers: {
+    Authorization: `Key ${process.env.PI_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+});
+
 
     // ✅ Log raw response for debugging
     if (!response.ok) {
