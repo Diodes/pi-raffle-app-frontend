@@ -42,29 +42,7 @@ function App() {
     };
 
     const payment = await window.Pi.createPayment(paymentData, {
-      onReadyForServerApproval: async (paymentId) => {
-        setPaymentLog(`🟡 Approving payment: ${paymentId}`);
-
-        try {
-          const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ paymentId }),
-          });
-
-          const result = await res.json();
-          if (result.status === "approved") {
-            setPaymentLog("✅ Server approved. Waiting for Pi wallet confirmation...");
-            console.log("✅ Server approved. Pi SDK will now handle wallet UI.");
-        }
-
-        } catch (err) {
-          console.error("❌ Approval error:", err);
-          setPaymentLog("❌ Approval error: " + err.message);
-        }
-      },
+     
 
      onReadyForServerCompletion: async (paymentId, txid) => {
   try {
