@@ -66,35 +66,36 @@ function App() {
         }
       },
 
-      onReadyForServerCompletion: async (paymentId, txid) => {
-        try {
-          const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ paymentId, txid }),
-          });
-
-          const result = await res.json();
-          if (result.success) {
-            await payment.complete();
-            setPaymentLog("✅ Payment completed!");
-          }
-        } catch (err) {
-          console.error("❌ Completion error:", err);
-          setPaymentLog("❌ Completion error: " + err.message);
-        }
+     onReadyForServerCompletion: async (paymentId, txid) => {
+  try {
+    const res = await fetch("https://pi-raffle-backend.onrender.com/payments/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-
-      onCancel: (paymentId) => {
-        setPaymentLog("⚠️ Payment was cancelled.");
-      },
-
-      onError: (err) => {
-        setPaymentLog("❌ Payment error: " + err.message);
-      },
+      body: JSON.stringify({ paymentId, txid }),
     });
+
+    const result = await res.json();
+    if (result.success) {
+      setPaymentLog("✅ Payment completed (backend confirmed)!");
+    } else {
+      setPaymentLog("⚠️ Backend responded, but not successful: " + JSON.stringify(result));
+    }
+  } catch (err) {
+    console.error("❌ Completion error:", err);
+    setPaymentLog("❌ Completion error: " + err.message);
+  }
+},
+
+onCancel: (paymentId) => {
+  setPaymentLog("⚠️ Payment was cancelled.");
+},
+
+onError: (err) => {
+  setPaymentLog("❌ Payment error: " + err.message);
+},
+
 
     console.log("🧾 Payment object returned:", payment);
     setPaymentLog(prev => prev + "\n🧾 Payment object created.");
