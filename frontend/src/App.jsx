@@ -12,22 +12,26 @@ function App() {
   };
 
   const handleLogin = async () => {
-    try {
-      setLogMessage("🟢 Pi.init + calling authenticate...");
-      window.Pi.init({ version: "2.0" }) // NO sandbox
+  try {
+    setLogMessage("🟢 Pi.init + calling authenticate...");
+    window.Pi.init({ version: "2.0" }); // NO sandbox
 
-      const scopes = ["username", "payments"];
-      const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      if (!user) {
-        setLogMessage("❌ No user returned");
-      } else {
-        setUser(user);
-        setLogMessage(`✅ Logged in as ${user.username}`);
-      }
-    } catch (error) {
-      setLogMessage(`❌ Login error: ${error.message || error}`);
+    const scopes = ["username", "payments"];
+    const authResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+    console.log("🔐 Pi.authenticate result:", authResult);
+
+    const actualUser = authResult?.user || authResult; // Fallback to entire object if not nested
+    if (!actualUser?.username) {
+      setLogMessage("❌ No username found in auth result");
+    } else {
+      setUser(actualUser);
+      setLogMessage(`✅ Logged in as ${actualUser.username}`);
     }
-  };
+  } catch (error) {
+    setLogMessage(`❌ Login error: ${error.message || error}`);
+  }
+};
+
 
   const handleTestPayment = async () => {
   try {
@@ -116,7 +120,8 @@ function App() {
 
       {user ? (
         <div className="mt-4">
-          <p>Welcome, <strong>{user.username}</strong>!</p>
+          <p>Welcome, <strong>{user?.username || "Mystery Pioneer"}</strong>!</p>
+
           <button
             className="mt-4 px-4 py-2 bg-green-600 text-white rounded"
             onClick={handleTestPayment}
