@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const fetch = require("node-fetch"); // if not installed: npm install node-fetch
+const fetch = require("node-fetch"); // Make sure this is installed via: npm install node-fetch
 
 dotenv.config();
 const app = express();
@@ -40,4 +40,10 @@ app.post("/payments/approve", async (req, res) => {
     console.error("❌ Error verifying payment:", error);
     res.status(500).json({ status: "error", message: error.message });
   }
+});
+
+// ✅ Use Render-compatible port binding
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Backend server is running on port ${PORT}`);
 });
