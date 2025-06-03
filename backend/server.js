@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const fetch = require("node-fetch"); // Make sure this is installed via: npm install node-fetch
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 
 dotenv.config();
 const app = express();
