@@ -56,9 +56,10 @@ function App() {
 
           const result = await res.json();
           if (result.status === "approved") {
-            await payment.approve();
-            console.log("✅ Called payment.approve()");
-          }
+            setPaymentLog("✅ Server approved. Waiting for Pi wallet confirmation...");
+            console.log("✅ Server approved. Pi SDK will now handle wallet UI.");
+        }
+
         } catch (err) {
           console.error("❌ Approval error:", err);
           setPaymentLog("❌ Approval error: " + err.message);
