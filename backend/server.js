@@ -14,46 +14,58 @@ app.post("/payments/approve", async (req, res) => {
   const { paymentId } = req.body;
   console.log("📥 /payments/approve HIT", paymentId);
 
-  // ✅ Check if API key is loaded
-  if (!process.env.PI_API_KEY) {
+  const PI_API_KEY = process.env.PI_API_KEY;
+  if (!PI_API_KEY) {
     console.error("❌ PI_API_KEY is missing in environment variables");
     return res.status(500).json({ status: "error", message: "Missing API key" });
-  } else {
-    console.log("🔐 Using Pi API Key: Loaded ✅");
   }
+  console.log("🔐 Using Pi API Key: Loaded ✅");
+
+  const headers = {
+    Authorization: `Key ${PI_API_KEY}`,
+    "Content-Type": "application/json",
+  };
 
   try {
-    const response = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
-  method: "GET",
-  headers: {
-    Authorization: `Key ${process.env.PI_API_KEY}`,
-    "Content-Type": "application/json",
-  },
-});
+    // Step 1: Get payment info
+    const paymentRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
+      method: "GET",
+      headers,
+    });
 
-
-    // ✅ Log raw response for debugging
-    if (!response.ok) {
-      const errorText = await response.text();  // This gives us the actual Pi API error
+    if (!paymentRes.ok) {
+      const errorText = await paymentRes.text();
       console.error("❌ Pi API response not OK:", errorText);
       return res.status(500).json({ status: "error", message: "Failed to verify payment" });
     }
 
-    const data = await response.json();
+    const payment = await paymentRes.json();
 
-    // ✅ Only approve if the payment is pending
-    if (data && data.transaction && data.transaction.status === "pending") {
-      console.log("✅ Payment verified with Pi Network");
-      res.json({ status: "approved" });
+    // Step 2: Approve the payment only if not already approved
+    if (!payment.status.developer_approved) {
+      const approveRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+        method: "POST",
+        headers,
+      });
+
+      if (!approveRes.ok) {
+        const errorText = await approveRes.text();
+        console.error("❌ Pi API approval failed:", errorText);
+        return res.status(500).json({ status: "error", message: "Approval failed", details: errorText });
+      }
+
+      console.log("✅ Payment approved on Pi Network");
+      return res.json({ status: "approved" });
     } else {
-      console.warn("⚠️ Payment not pending or invalid response:", data);
-      res.status(400).json({ status: "not_approved" });
+      console.log("⚠️ Payment already approved");
+      return res.json({ status: "already_approved" });
     }
   } catch (error) {
-    console.error("❌ Error verifying payment:", error);
-    res.status(500).json({ status: "error", message: error.message });
+    console.error("❌ Error during approval process:", error);
+    return res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 
 // ✅ Use Render-compatible port binding
