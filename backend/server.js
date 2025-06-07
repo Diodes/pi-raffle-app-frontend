@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const pool = require("./db");
+
 
 dotenv.config();
 const app = express();
@@ -72,12 +74,14 @@ app.post("/payments/complete", async (req, res) => {
     console.error("❌ PI_API_KEY is missing in environment variables");
     return res.status(500).json({ success: false, message: "Missing API key" });
   }
+
   const headers = {
     Authorization: `Key ${PI_API_KEY}`,
     "Content-Type": "application/json",
   };
 
   try {
+    // Step 1: Tell Pi Network the payment is complete
     const completeRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
       method: "POST",
       headers,
@@ -90,7 +94,22 @@ app.post("/payments/complete", async (req, res) => {
       return res.status(500).json({ success: false, message: errorText });
     }
 
-    console.log("✅ Payment marked complete");
+    // Step 2: Fetch payment info to extract user_uid
+    const paymentInfoRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
+      method: "GET",
+      headers,
+    });
+
+    const paymentData = await paymentInfoRes.json();
+    const user_uid = paymentData.user_uid;
+
+    // Step 3: Insert ticket into the database
+    await pool.query(
+      `INSERT INTO tickets (user_uid, payment_id, txid) VALUES ($1, $2, $3)`,
+      [user_uid, paymentId, txid]
+    );
+
+    console.log("✅ Payment marked complete & ticket stored 🎟️");
     res.json({ success: true });
   } catch (error) {
     console.error("❌ Completion Error:", error);
