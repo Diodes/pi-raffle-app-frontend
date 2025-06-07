@@ -45,6 +45,8 @@ function App() {
           setPaymentLog(`🟡 Approving payment: ${paymentId}`);
 
           try {
+           console.log("📤 Sending payment approval request with:", { paymentId });
+            
             const res = await fetch("https://pi-raffle-backend.onrender.com/payments/approve", {
               method: "POST",
               headers: {
@@ -52,6 +54,7 @@ function App() {
               },
               body: JSON.stringify({ paymentId }),
             });
+
 
             const result = await res.json();
             if (result.status === "approved") {
