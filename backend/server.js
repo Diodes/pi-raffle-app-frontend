@@ -1,8 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 dotenv.config();
 const app = express();
@@ -27,7 +26,6 @@ app.post("/payments/approve", async (req, res) => {
   };
 
   try {
-    // Step 1: Get payment info
     const paymentRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
       method: "GET",
       headers,
@@ -41,8 +39,7 @@ app.post("/payments/approve", async (req, res) => {
 
     const payment = await paymentRes.json();
 
-    // Step 2: Approve the payment only if not already approved
-    if (!payment.status.developer_approved) {
+    if (!payment.status.developer_approved && !payment.status.cancelled) {
       const approveRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
         method: "POST",
         headers,
@@ -57,8 +54,8 @@ app.post("/payments/approve", async (req, res) => {
       console.log("✅ Payment approved on Pi Network");
       return res.json({ status: "approved" });
     } else {
-      console.log("⚠️ Payment already approved");
-      return res.json({ status: "already_approved" });
+      console.log("⚠️ Payment already approved or cancelled");
+      return res.json({ status: "already_approved_or_cancelled" });
     }
   } catch (error) {
     console.error("❌ Error during approval process:", error);
@@ -66,10 +63,43 @@ app.post("/payments/approve", async (req, res) => {
   }
 });
 
+app.post("/payments/complete", async (req, res) => {
+  const { paymentId, txid } = req.body;
+  console.log("📥 /payments/complete HIT", paymentId, txid);
 
+  const PI_API_KEY = process.env.PI_API_KEY;
+  if (!PI_API_KEY) {
+    console.error("❌ PI_API_KEY is missing in environment variables");
+    return res.status(500).json({ success: false, message: "Missing API key" });
+  }
+  const headers = {
+    Authorization: `Key ${PI_API_KEY}`,
+    "Content-Type": "application/json",
+  };
 
-// ✅ Use Render-compatible port binding
+  try {
+    const completeRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ txid }),
+    });
+
+    if (!completeRes.ok) {
+      const errorText = await completeRes.text();
+      console.error("❌ Error completing payment:", errorText);
+      return res.status(500).json({ success: false, message: errorText });
+    }
+
+    console.log("✅ Payment marked complete");
+    res.json({ success: true });
+  } catch (error) {
+    console.error("❌ Completion Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend server is running on port ${PORT}`);
 });
+
