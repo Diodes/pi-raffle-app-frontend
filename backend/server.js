@@ -89,10 +89,15 @@ app.post("/payments/complete", async (req, res) => {
     });
 
     if (!completeRes.ok) {
-      const errorText = await completeRes.text();
-      console.error("❌ Error completing payment:", errorText);
-      return res.status(500).json({ success: false, message: errorText });
-    }
+  const errorText = await completeRes.text();
+  const fallback = `Status ${completeRes.status}`;
+  console.error("❌ Error completing payment:", errorText || fallback);
+  return res.status(500).json({ 
+    success: false, 
+    message: errorText || fallback 
+  });
+}
+
 
     // Step 2: Fetch payment info to extract user_uid
     const paymentInfoRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
